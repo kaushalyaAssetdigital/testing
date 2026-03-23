@@ -4,39 +4,85 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <style>
-        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; margin: 0; background: #e5ddd5; display: flex; flex-direction: column; height: 100vh; border-radius: 12px; overflow: hidden; }
-        .header { background: #075e54; color: white; padding: 12px; font-weight: bold; text-align: center; font-size: 16px; }
+        body { font-family: 'Segoe UI', sans-serif; margin: 0; background: #e5ddd5; display: flex; flex-direction: column; height: 100vh; overflow: hidden; }
+        .header { background: #075e54; color: white; padding: 12px; font-weight: bold; text-align: center; }
         #chat-window { flex: 1; padding: 15px; overflow-y: auto; display: flex; flex-direction: column; gap: 10px; }
-        .msg { padding: 8px 12px; border-radius: 10px; max-width: 75%; font-size: 14px; line-height: 1.4; word-wrap: break-word; }
-        .bot-msg { background: #ffffff; align-self: flex-start; color: #333; box-shadow: 0 1px 2px rgba(0,0,0,0.1); }
-        .user-msg { background: #dcf8c6; align-self: flex-end; color: #333; box-shadow: 0 1px 2px rgba(0,0,0,0.1); }
-        .chat-img { max-width: 100%; border-radius: 8px; margin-top: 5px; cursor: pointer; }
-        .input-area { display: flex; align-items: center; padding: 10px; background: #f0f0f0; border-top: 1px solid #ddd; }
-        #user-input { flex: 1; padding: 10px 15px; border: none; border-radius: 20px; outline: none; font-size: 14px; }
-        .icon-btn { cursor: pointer; font-size: 20px; border: none; background: none; padding: 5px; margin: 0 5px; color: #075e54; transition: transform 0.2s; }
-        .icon-btn:active { transform: scale(0.9); }
+        .msg { padding: 8px 12px; border-radius: 10px; max-width: 75%; font-size: 14px; word-wrap: break-word; position: relative; }
+        .bot-msg { background: #ffffff; align-self: flex-start; box-shadow: 0 1px 2px rgba(0,0,0,0.1); }
+        .user-msg { background: #dcf8c6; align-self: flex-end; box-shadow: 0 1px 2px rgba(0,0,0,0.1); }
+        .chat-img { max-width: 100%; border-radius: 8px; display: block; }
+        
+        /* --- Image Preview Box --- */
+        #preview-container {
+            display: none; /* Default hidden */
+            padding: 10px;
+            background: #f0f0f0;
+            border-top: 2px solid #075e54;
+            position: relative;
+            text-align: center;
+        }
+        #preview-img { max-height: 150px; border-radius: 5px; box-shadow: 0 2px 5px rgba(0,0,0,0.2); }
+        .close-preview {
+            position: absolute; top: 5px; right: 10px;
+            background: #ff5f5f; color: white; border: none;
+            border-radius: 50%; width: 25px; height: 25px; cursor: pointer;
+        }
+
+        .input-area { display: flex; align-items: center; padding: 10px; background: #fff; border-top: 1px solid #ddd; }
+        #user-input { flex: 1; padding: 10px; border: 1px solid #ddd; border-radius: 20px; outline: none; }
+        .icon-btn { cursor: pointer; font-size: 20px; border: none; background: none; color: #075e54; margin: 0 5px; }
         #image-input { display: none; }
     </style>
 </head>
 <body>
 
-<div class="header">Customer Support Bot</div>
+<div class="header">Support Chat</div>
 <div id="chat-window">
-    <div class="msg bot-msg">ආයුබෝවන්! මම ඔබට කොහොමද උදව් කරන්නේ? ඔබට අවශ්‍ය නම් පින්තූරයක් වුවත් එවන්න පුළුවන්.</div>
+    <div class="msg bot-msg">හෙලෝ! ඔබට අවශ්‍ය පින්තූරයක් Preview කර එවන්න පුළුවන්.</div>
+</div>
+
+<div id="preview-container">
+    <button class="close-preview" onclick="clearPreview()">×</button>
+    <img id="preview-img" src="" alt="Preview">
 </div>
 
 <div class="input-area">
     <label for="image-input" class="icon-btn">📷</label>
     <input type="file" id="image-input" accept="image/*">
     <input type="text" id="user-input" placeholder="Type a message...">
-    <button id="send-btn" class="icon-btn">➤</button>
+    <button id="send-btn" class="icon-btn" onclick="handleSend()">➤</button>
 </div>
 
 <script>
     const chatWindow = document.getElementById('chat-window');
     const userInput = document.getElementById('user-input');
     const imageInput = document.getElementById('image-input');
-    const sendBtn = document.getElementById('send-btn');
+    const previewContainer = document.getElementById('preview-container');
+    const previewImg = document.getElementById('preview-img');
+    
+    let selectedImageBase64 = null; // තෝරාගත් image එක තාවකාලිකව තබා ගැනීමට
+
+    // Image එකක් තේරූ විට Preview පෙන්වීම
+    imageInput.onchange = (e) => {
+        const file = e.target.files[0];
+        if (file) {
+            const reader = new FileReader();
+            reader.onload = (event) => {
+                selectedImageBase64 = event.target.result;
+                previewImg.src = selectedImageBase64;
+                previewContainer.style.display = 'block'; // Preview පෙන්වන්න
+            };
+            reader.readAsDataURL(file);
+        }
+    };
+
+    // Preview එක අයින් කිරීම
+    function clearPreview() {
+        selectedImageBase64 = null;
+        previewImg.src = "";
+        previewContainer.style.display = 'none';
+        imageInput.value = ""; // Input එක reset කරන්න
+    }
 
     function addMessage(content, type, isImage = false) {
         const div = document.createElement('div');
@@ -53,34 +99,27 @@
         chatWindow.scrollTop = chatWindow.scrollHeight;
     }
 
-    function getBotResponse(input) {
-        const val = input.toLowerCase();
-        if (val.includes("hi") || val.includes("hello")) return "Hello! How can I help you today?";
-        if (val.includes("price") || val.includes("මිල")) return "අපේ සේවාවන් රු. 1000 සිට ආරම්භ වේ.";
-        return "ඔබේ පණිවිඩය අපට ලැබුණා. ඉක්මනින් පිළිතුරක් ලබා දෙන්නම්.";
-    }
-
     function handleSend() {
         const text = userInput.value.trim();
-        if (!text) return;
-        addMessage(text, 'user');
-        userInput.value = '';
-        setTimeout(() => addMessage(getBotResponse(text), 'bot'), 800);
+
+        // 1. පින්තූරයක් තියෙනවා නම් ඒක යවන්න
+        if (selectedImageBase64) {
+            addMessage(selectedImageBase64, 'user', true);
+            clearPreview(); // පින්තූරය යැවූ පසු preview අයින් කරන්න
+        }
+
+        // 2. Text එකක් තියෙනවා නම් ඒක යවන්න
+        if (text) {
+            addMessage(text, 'user');
+            userInput.value = '';
+        }
+
+        // Bot ගේ පිළිතුර
+        if (text || selectedImageBase64) {
+            setTimeout(() => addMessage("ඔබේ පණිවිඩය ලැබුණා!", 'bot'), 1000);
+        }
     }
 
-    imageInput.onchange = (e) => {
-        const file = e.target.files[0];
-        if (file) {
-            const reader = new FileReader();
-            reader.onload = (event) => {
-                addMessage(event.target.result, 'user', true);
-                setTimeout(() => addMessage("ඔබ පින්තූරයක් එව්වා. මම එය පරීක්ෂා කර බලන්නම්.", 'bot'), 1000);
-            };
-            reader.readAsDataURL(file);
-        }
-    };
-
-    sendBtn.onclick = handleSend;
     userInput.onkeypress = (e) => { if (e.key === 'Enter') handleSend(); };
 </script>
 </body>
