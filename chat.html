@@ -2,67 +2,86 @@
 <html>
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <style>
-        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; margin: 0; background: #fff; display: flex; flex-direction: column; height: 100vh; border: 1px solid #ddd; border-radius: 10px; overflow: hidden; }
-        .header { background: #075e54; color: white; padding: 15px; font-weight: bold; text-align: center; }
-        #chat-window { flex: 1; padding: 15px; overflow-y: auto; background: #e5ddd5; }
-        .msg { margin-bottom: 10px; padding: 8px 12px; border-radius: 8px; max-width: 80%; word-wrap: break-word; }
-        .user-msg { background: #dcf8c6; align-self: flex-end; margin-left: auto; text-align: right; }
-        .bot-msg { background: #fff; align-self: flex-start; }
-        .input-area { display: flex; padding: 10px; background: #f0f0f0; border-top: 1px solid #ccc; }
-        #user-input { flex: 1; padding: 10px; border: 1px solid #ccc; border-radius: 20px; outline: none; }
-        #send-btn { background: #075e54; color: white; border: none; padding: 10px 15px; margin-left: 5px; border-radius: 50%; cursor: pointer; }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; margin: 0; background: #e5ddd5; display: flex; flex-direction: column; height: 100vh; border-radius: 12px; overflow: hidden; }
+        .header { background: #075e54; color: white; padding: 12px; font-weight: bold; text-align: center; font-size: 16px; }
+        #chat-window { flex: 1; padding: 15px; overflow-y: auto; display: flex; flex-direction: column; gap: 10px; }
+        .msg { padding: 8px 12px; border-radius: 10px; max-width: 75%; font-size: 14px; line-height: 1.4; word-wrap: break-word; }
+        .bot-msg { background: #ffffff; align-self: flex-start; color: #333; box-shadow: 0 1px 2px rgba(0,0,0,0.1); }
+        .user-msg { background: #dcf8c6; align-self: flex-end; color: #333; box-shadow: 0 1px 2px rgba(0,0,0,0.1); }
+        .chat-img { max-width: 100%; border-radius: 8px; margin-top: 5px; cursor: pointer; }
+        .input-area { display: flex; align-items: center; padding: 10px; background: #f0f0f0; border-top: 1px solid #ddd; }
+        #user-input { flex: 1; padding: 10px 15px; border: none; border-radius: 20px; outline: none; font-size: 14px; }
+        .icon-btn { cursor: pointer; font-size: 20px; border: none; background: none; padding: 5px; margin: 0 5px; color: #075e54; transition: transform 0.2s; }
+        .icon-btn:active { transform: scale(0.9); }
+        #image-input { display: none; }
     </style>
 </head>
 <body>
 
-<div class="header">Chat with Us</div>
+<div class="header">Customer Support Bot</div>
 <div id="chat-window">
-    <div class="msg bot-msg">ආයුබෝවන්! ඔබට අද උදව් කරන්නේ කොහොමද?</div>
+    <div class="msg bot-msg">ආයුබෝවන්! මම ඔබට කොහොමද උදව් කරන්නේ? ඔබට අවශ්‍ය නම් පින්තූරයක් වුවත් එවන්න පුළුවන්.</div>
 </div>
 
 <div class="input-area">
-    <input type="text" id="user-input" placeholder="මෙතන ලියන්න...">
-    <button id="send-btn">➤</button>
+    <label for="image-input" class="icon-btn">📷</label>
+    <input type="file" id="image-input" accept="image/*">
+    <input type="text" id="user-input" placeholder="Type a message...">
+    <button id="send-btn" class="icon-btn">➤</button>
 </div>
 
 <script>
     const chatWindow = document.getElementById('chat-window');
     const userInput = document.getElementById('user-input');
+    const imageInput = document.getElementById('image-input');
     const sendBtn = document.getElementById('send-btn');
 
-    function addMessage(text, type) {
+    function addMessage(content, type, isImage = false) {
         const div = document.createElement('div');
         div.className = `msg ${type}-msg`;
-        div.innerText = text;
+        if (isImage) {
+            const img = document.createElement('img');
+            img.src = content;
+            img.className = 'chat-img';
+            div.appendChild(img);
+        } else {
+            div.innerText = content;
+        }
         chatWindow.appendChild(div);
         chatWindow.scrollTop = chatWindow.scrollHeight;
     }
 
     function getBotResponse(input) {
         const val = input.toLowerCase();
-        if (val.includes("හෙලෝ") || val.includes("hi")) return "ආයුබෝවන්! ඔබට අපගේ සේවාවන් ගැන දැනගන්න අවශ්‍යද?";
-        if (val.includes("මිල") || val.includes("price")) return "අපේ සේවාවන් රු. 1500 සිට ආරම්භ වේ.";
-        if (val.includes("ස්තුතියි") || val.includes("thanks")) return "ඔබට සුභ දවසක්!";
-        return "කණගාටුයි, මට ඒක තේරුණේ නැහැ. කරුණාකර වෙනත් විදිහකට අහන්න.";
+        if (val.includes("hi") || val.includes("hello")) return "Hello! How can I help you today?";
+        if (val.includes("price") || val.includes("මිල")) return "අපේ සේවාවන් රු. 1000 සිට ආරම්භ වේ.";
+        return "ඔබේ පණිවිඩය අපට ලැබුණා. ඉක්මනින් පිළිතුරක් ලබා දෙන්නම්.";
     }
 
-    function processChat() {
-        const msg = userInput.value.trim();
-        if (!msg) return;
-
-        addMessage(msg, 'user');
+    function handleSend() {
+        const text = userInput.value.trim();
+        if (!text) return;
+        addMessage(text, 'user');
         userInput.value = '';
-
-        setTimeout(() => {
-            const response = getBotResponse(msg);
-            addMessage(response, 'bot');
-        }, 800);
+        setTimeout(() => addMessage(getBotResponse(text), 'bot'), 800);
     }
 
-    sendBtn.onclick = processChat;
-    userInput.onkeypress = (e) => { if (e.key === 'Enter') processChat(); };
-</script>
+    imageInput.onchange = (e) => {
+        const file = e.target.files[0];
+        if (file) {
+            const reader = new FileReader();
+            reader.onload = (event) => {
+                addMessage(event.target.result, 'user', true);
+                setTimeout(() => addMessage("ඔබ පින්තූරයක් එව්වා. මම එය පරීක්ෂා කර බලන්නම්.", 'bot'), 1000);
+            };
+            reader.readAsDataURL(file);
+        }
+    };
 
+    sendBtn.onclick = handleSend;
+    userInput.onkeypress = (e) => { if (e.key === 'Enter') handleSend(); };
+</script>
 </body>
 </html>
