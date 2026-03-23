@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; margin: 0; background: #fff; display: flex; flex-direction: column; height: 100vh; border: 1px solid #ddd; border-radius: 10px; overflow: hidden; }
+        .header { background: #075e54; color: white; padding: 15px; font-weight: bold; text-align: center; }
+        #chat-window { flex: 1; padding: 15px; overflow-y: auto; background: #e5ddd5; }
+        .msg { margin-bottom: 10px; padding: 8px 12px; border-radius: 8px; max-width: 80%; word-wrap: break-word; }
+        .user-msg { background: #dcf8c6; align-self: flex-end; margin-left: auto; text-align: right; }
+        .bot-msg { background: #fff; align-self: flex-start; }
+        .input-area { display: flex; padding: 10px; background: #f0f0f0; border-top: 1px solid #ccc; }
+        #user-input { flex: 1; padding: 10px; border: 1px solid #ccc; border-radius: 20px; outline: none; }
+        #send-btn { background: #075e54; color: white; border: none; padding: 10px 15px; margin-left: 5px; border-radius: 50%; cursor: pointer; }
+    </style>
+</head>
+<body>
+
+<div class="header">Chat with Us</div>
+<div id="chat-window">
+    <div class="msg bot-msg">ආයුබෝවන්! ඔබට අද උදව් කරන්නේ කොහොමද?</div>
+</div>
+
+<div class="input-area">
+    <input type="text" id="user-input" placeholder="මෙතන ලියන්න...">
+    <button id="send-btn">➤</button>
+</div>
+
+<script>
+    const chatWindow = document.getElementById('chat-window');
+    const userInput = document.getElementById('user-input');
+    const sendBtn = document.getElementById('send-btn');
+
+    function addMessage(text, type) {
+        const div = document.createElement('div');
+        div.className = `msg ${type}-msg`;
+        div.innerText = text;
+        chatWindow.appendChild(div);
+        chatWindow.scrollTop = chatWindow.scrollHeight;
+    }
+
+    function getBotResponse(input) {
+        const val = input.toLowerCase();
+        if (val.includes("හෙලෝ") || val.includes("hi")) return "ආයුබෝවන්! ඔබට අපගේ සේවාවන් ගැන දැනගන්න අවශ්‍යද?";
+        if (val.includes("මිල") || val.includes("price")) return "අපේ සේවාවන් රු. 1500 සිට ආරම්භ වේ.";
+        if (val.includes("ස්තුතියි") || val.includes("thanks")) return "ඔබට සුභ දවසක්!";
+        return "කණගාටුයි, මට ඒක තේරුණේ නැහැ. කරුණාකර වෙනත් විදිහකට අහන්න.";
+    }
+
+    function processChat() {
+        const msg = userInput.value.trim();
+        if (!msg) return;
+
+        addMessage(msg, 'user');
+        userInput.value = '';
+
+        setTimeout(() => {
+            const response = getBotResponse(msg);
+            addMessage(response, 'bot');
+        }, 800);
+    }
+
+    sendBtn.onclick = processChat;
+    userInput.onkeypress = (e) => { if (e.key === 'Enter') processChat(); };
+</script>
+
+</body>
+</html>
