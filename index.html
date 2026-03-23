@@ -2,44 +2,47 @@
 <html ⚡>
 <head>
     <meta charset="utf-8">
-    <title>My AMP Website</title>
+    <title>AMP Chat Site</title>
     <link rel="canonical" href="self.html">
     <meta name="viewport" content="width=device-width,minimum-scale=1,initial-scale=1">
     
     <script async src="https://cdn.ampproject.org/v0.js"></script>
     <script async custom-element="amp-iframe" src="https://cdn.ampproject.org/v0/amp-iframe-0.1.js"></script>
+    <script async custom-element="amp-bind" src="https://cdn.ampproject.org/v0/amp-bind-0.1.js"></script>
 
     <style amp-boilerplate>body{-webkit-animation:-amp-start 8s steps(1,end) 0s 1 normal both;-moz-animation:-amp-start 8s steps(1,end) 0s 1 normal both;-ms-animation:-amp-start 8s steps(1,end) 0s 1 normal both;animation:-amp-start 8s steps(1,end) 0s 1 normal both}@-webkit-keyframes -amp-start{from{visibility:hidden}to{visibility:visible}}@-moz-keyframes -amp-start{from{visibility:hidden}to{visibility:visible}}@-ms-keyframes -amp-start{from{visibility:hidden}to{visibility:visible}}@-o-keyframes -amp-start{from{visibility:hidden}to{visibility:visible}}@keyframes -amp-start{from{visibility:hidden}to{visibility:visible}}</style><noscript><style amp-boilerplate>body{-webkit-animation:none;-moz-animation:none;-ms-animation:none;animation:none}</style></noscript>
 
     <style amp-custom>
-        body { font-family: Arial, sans-serif; line-height: 1.6; padding: 20px; }
-        
-        /* Floating Chat Box CSS */
-        .chat-wrapper {
-            position: fixed;
-            bottom: 20px;
-            right: 20px;
-            width: 320px;
-            height: 450px;
-            z-index: 999;
-            box-shadow: 0 10px 25px rgba(0,0,0,0.2);
-            border-radius: 12px;
-            overflow: hidden;
-            background: #fff;
+        .chat-btn {
+            position: fixed; bottom: 20px; right: 20px;
+            width: 60px; height: 60px; border-radius: 50%;
+            background: #075e54; color: white; border: none;
+            font-size: 24px; cursor: pointer; z-index: 1000;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.3);
         }
+        .chat-container {
+            position: fixed; bottom: 90px; right: 20px;
+            width: 320px; height: 480px; z-index: 999;
+            display: none; border-radius: 12px; overflow: hidden;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.2);
+        }
+        .is-open { display: block; }
     </style>
 </head>
 <body>
 
-    <h1>Welcome to My AMP Site</h1>
-    <p>මෙහි ඔබගේ වෙබ් අඩවියේ අන්තර්ගතය පෙන්වයි...</p>
+    <amp-state id="chat"><script type="application/json">{"open": false}</script></amp-state>
 
-    <div class="chat-wrapper">
-        <amp-iframe width="320" height="450"
-            layout="responsive"
+    <button class="chat-btn" on="tap:AMP.setState({chat: {open: !chat.open}})">
+        <span [text]="chat.open ? '✕' : '💬'">💬</span>
+    </button>
+
+    <div class="chat-container" [class]="chat.open ? 'chat-container is-open' : 'chat-container'">
+        <amp-iframe width="320" height="480"
+            layout="fixed"
             sandbox="allow-scripts allow-same-origin allow-forms"
             frameborder="0"
-            src="https://kaushalyaassetdigital.github.io/testing/chat.html"> <div placeholder style="padding: 20px;">Loading Chat...</div>
+            src="https://kaushalyaassetdigital.github.io/testing/chat.html"> <div placeholder>Loading...</div>
         </amp-iframe>
     </div>
 

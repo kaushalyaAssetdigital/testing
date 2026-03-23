@@ -10,9 +10,9 @@
         .msg { padding: 8px 12px; border-radius: 10px; max-width: 75%; font-size: 14px; word-wrap: break-word; }
         .bot-msg { background: #ffffff; align-self: flex-start; box-shadow: 0 1px 2px rgba(0,0,0,0.1); }
         .user-msg { background: #dcf8c6; align-self: flex-end; box-shadow: 0 1px 2px rgba(0,0,0,0.1); }
-        .chat-img { max-width: 100%; border-radius: 8px; display: block; }
+        .chat-img { max-width: 100%; border-radius: 8px; display: block; margin-top: 5px; }
         
-        /* Image Preview Area */
+        /* --- Preview Box --- */
         #preview-box {
             display: none; 
             padding: 10px;
@@ -20,12 +20,20 @@
             border-top: 2px solid #075e54;
             position: relative;
             text-align: center;
+            min-height: 50px;
         }
-        #preview-img { max-height: 120px; border-radius: 5px; border: 1px solid #ddd; }
+        #preview-img { 
+            max-height: 150px; 
+            max-width: 90%; 
+            border-radius: 5px; 
+            border: 2px solid #ddd;
+            display: inline-block;
+        }
         .del-btn {
             position: absolute; top: 5px; right: 10px;
             background: #ff4d4d; color: white; border: none;
-            border-radius: 50%; width: 22px; height: 22px; cursor: pointer; font-weight: bold;
+            border-radius: 50%; width: 25px; height: 25px; cursor: pointer; font-weight: bold;
+            z-index: 10;
         }
 
         .input-area { display: flex; align-items: center; padding: 10px; background: #f0f0f0; border-top: 1px solid #ddd; }
@@ -36,14 +44,14 @@
 </head>
 <body>
 
-<div class="header">Customer Support</div>
+<div class="header">Support Chat</div>
 <div id="chat-window">
-    <div class="msg bot-msg">හෙලෝ! පින්තූරයක් තෝරා Preview කර යවන්න.</div>
+    <div class="msg bot-msg">හෙලෝ! පින්තූරයක් තෝරා Preview කර බලන්න.</div>
 </div>
 
 <div id="preview-box">
     <button class="del-btn" onclick="clearPreview()">×</button>
-    <img id="preview-img" src="" alt="Preview">
+    <img id="preview-img" src="" alt="Image Preview">
 </div>
 
 <div class="input-area">
@@ -60,25 +68,25 @@
     const previewBox = document.getElementById('preview-box');
     const previewImg = document.getElementById('preview-img');
     
-    let selectedImg = null;
+    let currentBase64 = null;
 
-    // පින්තූරය තේරූ විට (Select)
-    imageInput.onchange = (e) => {
+    imageInput.addEventListener('change', function(e) {
         const file = e.target.files[0];
         if (file) {
             const reader = new FileReader();
-            reader.onload = (event) => {
-                selectedImg = event.target.result;
-                previewImg.src = selectedImg;
-                previewBox.style.display = 'block'; // Preview එක පෙන්නනවා
+            reader.onload = function(event) {
+                currentBase64 = event.target.result;
+                previewImg.src = currentBase64;
+                previewBox.style.display = 'block';
+                chatWindow.scrollTop = chatWindow.scrollHeight; // Auto scroll
             };
             reader.readAsDataURL(file);
         }
-    };
+    });
 
-    // Preview එක අයින් කරන්න (Delete)
     function clearPreview() {
-        selectedImg = null;
+        currentBase64 = null;
+        previewImg.src = "";
         previewBox.style.display = 'none';
         imageInput.value = ""; 
     }
@@ -98,21 +106,17 @@
         chatWindow.scrollTop = chatWindow.scrollHeight;
     }
 
-    // Send Button එක එබූ විට
     function handleSend() {
         const text = userInput.value.trim();
-
-        if (selectedImg) {
-            addMessage(selectedImg, 'user', true); // පින්තූරය යවනවා
-            clearPreview(); 
+        if (currentBase64) {
+            addMessage(currentBase64, 'user', true);
+            clearPreview();
         }
-
         if (text) {
             addMessage(text, 'user');
             userInput.value = '';
         }
-
-        if (text || selectedImg) {
+        if (text || currentBase64) {
             setTimeout(() => addMessage("ඔබේ පණිවිඩය ලැබුණා!", 'bot'), 1000);
         }
     }
