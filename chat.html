@@ -7,49 +7,49 @@
         body { font-family: 'Segoe UI', sans-serif; margin: 0; background: #e5ddd5; display: flex; flex-direction: column; height: 100vh; overflow: hidden; }
         .header { background: #075e54; color: white; padding: 12px; font-weight: bold; text-align: center; }
         #chat-window { flex: 1; padding: 15px; overflow-y: auto; display: flex; flex-direction: column; gap: 10px; }
-        .msg { padding: 8px 12px; border-radius: 10px; max-width: 75%; font-size: 14px; word-wrap: break-word; position: relative; }
+        .msg { padding: 8px 12px; border-radius: 10px; max-width: 75%; font-size: 14px; word-wrap: break-word; }
         .bot-msg { background: #ffffff; align-self: flex-start; box-shadow: 0 1px 2px rgba(0,0,0,0.1); }
         .user-msg { background: #dcf8c6; align-self: flex-end; box-shadow: 0 1px 2px rgba(0,0,0,0.1); }
         .chat-img { max-width: 100%; border-radius: 8px; display: block; }
         
-        /* --- Image Preview Box --- */
-        #preview-container {
-            display: none; /* Default hidden */
+        /* Image Preview Area */
+        #preview-box {
+            display: none; 
             padding: 10px;
-            background: #f0f0f0;
+            background: #fff;
             border-top: 2px solid #075e54;
             position: relative;
             text-align: center;
         }
-        #preview-img { max-height: 150px; border-radius: 5px; box-shadow: 0 2px 5px rgba(0,0,0,0.2); }
-        .close-preview {
+        #preview-img { max-height: 120px; border-radius: 5px; border: 1px solid #ddd; }
+        .del-btn {
             position: absolute; top: 5px; right: 10px;
-            background: #ff5f5f; color: white; border: none;
-            border-radius: 50%; width: 25px; height: 25px; cursor: pointer;
+            background: #ff4d4d; color: white; border: none;
+            border-radius: 50%; width: 22px; height: 22px; cursor: pointer; font-weight: bold;
         }
 
-        .input-area { display: flex; align-items: center; padding: 10px; background: #fff; border-top: 1px solid #ddd; }
-        #user-input { flex: 1; padding: 10px; border: 1px solid #ddd; border-radius: 20px; outline: none; }
-        .icon-btn { cursor: pointer; font-size: 20px; border: none; background: none; color: #075e54; margin: 0 5px; }
+        .input-area { display: flex; align-items: center; padding: 10px; background: #f0f0f0; border-top: 1px solid #ddd; }
+        #user-input { flex: 1; padding: 10px; border: 1px solid #ccc; border-radius: 20px; outline: none; }
+        .icon-btn { cursor: pointer; font-size: 22px; border: none; background: none; color: #075e54; margin: 0 8px; }
         #image-input { display: none; }
     </style>
 </head>
 <body>
 
-<div class="header">Support Chat</div>
+<div class="header">Customer Support</div>
 <div id="chat-window">
-    <div class="msg bot-msg">හෙලෝ! ඔබට අවශ්‍ය පින්තූරයක් Preview කර එවන්න පුළුවන්.</div>
+    <div class="msg bot-msg">හෙලෝ! පින්තූරයක් තෝරා Preview කර යවන්න.</div>
 </div>
 
-<div id="preview-container">
-    <button class="close-preview" onclick="clearPreview()">×</button>
+<div id="preview-box">
+    <button class="del-btn" onclick="clearPreview()">×</button>
     <img id="preview-img" src="" alt="Preview">
 </div>
 
 <div class="input-area">
     <label for="image-input" class="icon-btn">📷</label>
     <input type="file" id="image-input" accept="image/*">
-    <input type="text" id="user-input" placeholder="Type a message...">
+    <input type="text" id="user-input" placeholder="පණිවිඩය ලියන්න...">
     <button id="send-btn" class="icon-btn" onclick="handleSend()">➤</button>
 </div>
 
@@ -57,31 +57,30 @@
     const chatWindow = document.getElementById('chat-window');
     const userInput = document.getElementById('user-input');
     const imageInput = document.getElementById('image-input');
-    const previewContainer = document.getElementById('preview-container');
+    const previewBox = document.getElementById('preview-box');
     const previewImg = document.getElementById('preview-img');
     
-    let selectedImageBase64 = null; // තෝරාගත් image එක තාවකාලිකව තබා ගැනීමට
+    let selectedImg = null;
 
-    // Image එකක් තේරූ විට Preview පෙන්වීම
+    // පින්තූරය තේරූ විට (Select)
     imageInput.onchange = (e) => {
         const file = e.target.files[0];
         if (file) {
             const reader = new FileReader();
             reader.onload = (event) => {
-                selectedImageBase64 = event.target.result;
-                previewImg.src = selectedImageBase64;
-                previewContainer.style.display = 'block'; // Preview පෙන්වන්න
+                selectedImg = event.target.result;
+                previewImg.src = selectedImg;
+                previewBox.style.display = 'block'; // Preview එක පෙන්නනවා
             };
             reader.readAsDataURL(file);
         }
     };
 
-    // Preview එක අයින් කිරීම
+    // Preview එක අයින් කරන්න (Delete)
     function clearPreview() {
-        selectedImageBase64 = null;
-        previewImg.src = "";
-        previewContainer.style.display = 'none';
-        imageInput.value = ""; // Input එක reset කරන්න
+        selectedImg = null;
+        previewBox.style.display = 'none';
+        imageInput.value = ""; 
     }
 
     function addMessage(content, type, isImage = false) {
@@ -99,28 +98,24 @@
         chatWindow.scrollTop = chatWindow.scrollHeight;
     }
 
+    // Send Button එක එබූ විට
     function handleSend() {
         const text = userInput.value.trim();
 
-        // 1. පින්තූරයක් තියෙනවා නම් ඒක යවන්න
-        if (selectedImageBase64) {
-            addMessage(selectedImageBase64, 'user', true);
-            clearPreview(); // පින්තූරය යැවූ පසු preview අයින් කරන්න
+        if (selectedImg) {
+            addMessage(selectedImg, 'user', true); // පින්තූරය යවනවා
+            clearPreview(); 
         }
 
-        // 2. Text එකක් තියෙනවා නම් ඒක යවන්න
         if (text) {
             addMessage(text, 'user');
             userInput.value = '';
         }
 
-        // Bot ගේ පිළිතුර
-        if (text || selectedImageBase64) {
+        if (text || selectedImg) {
             setTimeout(() => addMessage("ඔබේ පණිවිඩය ලැබුණා!", 'bot'), 1000);
         }
     }
-
-    userInput.onkeypress = (e) => { if (e.key === 'Enter') handleSend(); };
 </script>
 </body>
 </html>
