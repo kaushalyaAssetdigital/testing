@@ -4,6 +4,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+    
     <style>
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
@@ -25,7 +27,6 @@
             box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
         }
 
-        /* --- Chat window logic for bottom-to-top appearance --- */
         #chat-window {
             flex: 1;
             padding: 15px;
@@ -49,168 +50,186 @@
             box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
         }
 
-        .bot-msg {
-            background: #ffffff;
-            align-self: flex-start;
-        }
+        .bot-msg { background: #ffffff; align-self: flex-start; }
+        .user-msg { background: #dcf8c6; align-self: flex-end; }
 
-        .user-msg {
-            background: #dcf8c6;
-            align-self: flex-end;
-        }
-
-        .chat-img {
-            max-width: 100%;
+        .chat-img { max-width: 100%; border-radius: 8px; display: block; margin-top: 5px; }
+        
+        /* File bubble style */
+        .file-msg {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            background: rgba(0,0,0,0.05);
+            padding: 10px;
             border-radius: 8px;
-            display: block;
-            margin-top: 5px;
+            color: #075e54;
+            font-weight: 500;
         }
+
+        .pdf-icon { color: #e74c3c; font-size: 20px; }
+        .generic-file-icon { color: #7f8c8d; font-size: 20px; }
 
         #preview-box {
             display: none;
-            padding: 10px;
+            padding: 12px;
             background: #fff;
             border-top: 2px solid #075e54;
             text-align: center;
             position: relative;
         }
 
+        #preview-content { font-size: 13px; color: #333; margin-top: 5px; font-weight: 600; }
+
         #preview-img {
             max-height: 100px;
             border-radius: 5px;
             border: 1px solid #ddd;
+            display: none;
+            margin: 0 auto 5px;
         }
 
         .del-btn {
-            position: absolute;
-            top: 5px;
-            right: 15px;
-            background: #ff4d4d;
-            color: white;
-            border: none;
-            border-radius: 50%;
-            cursor: pointer;
-            padding: 2px 7px;
-            font-weight: bold;
+            position: absolute; top: 8px; right: 15px;
+            background: #ff4d4d; color: white; border: none;
+            border-radius: 50%; cursor: pointer; width: 24px; height: 24px;
+            display: flex; align-items: center; justify-content: center;
         }
 
         .input-area {
-            display: flex;
-            align-items: center;
-            padding: 10px;
-            background: #f0f0f0;
-            border-top: 1px solid #ddd;
+            display: flex; align-items: center; padding: 10px;
+            background: #f0f0f0; border-top: 1px solid #ddd;
         }
 
         #user-input {
-            flex: 1;
-            padding: 10px 15px;
-            border: 1px solid #ccc;
-            border-radius: 20px;
-            outline: none;
+            flex: 1; padding: 10px 15px; border: 1px solid #ccc;
+            border-radius: 20px; outline: none; margin-left: 5px;
         }
 
         .icon-btn {
-            cursor: pointer;
-            font-size: 22px;
-            border: none;
-            background: none;
-            color: #075e54;
-            margin: 0 8px;
+            cursor: pointer; font-size: 20px; border: none;
+            background: none; color: #075e54; margin: 0 5px;
+            transition: 0.2s;
         }
 
-        #image-input {
-            display: none;
-        }
+        .icon-btn:hover { color: #128c7e; transform: scale(1.1); }
+        #file-input { display: none; }
     </style>
 </head>
 
 <body>
 
-    <div class="header">Support Chat</div>
+    <div class="header">Customer Support</div>
 
     <div id="chat-window">
         <div id="msg-list">
-            <div class="msg bot-msg">Welcome! Please select an image or type a message to start.</div>
+            <div class="msg bot-msg">Hi! You can attach images or PDF files here.</div>
         </div>
     </div>
 
     <div id="preview-box">
-        <button class="del-btn" onclick="clearPreview()">×</button>
+        <button class="del-btn" onclick="clearPreview()"><i class="fas fa-times"></i></button>
         <img id="preview-img" src="">
+        <div id="preview-content"></div>
     </div>
 
     <div class="input-area">
-        <label for="image-input" class="icon-btn">📷</label>
-        <input type="file" id="image-input" accept="image/*">
+        <label for="file-input" class="icon-btn" title="Attach File">
+            <i class="fas fa-paperclip"></i>
+        </label>
+        <input type="file" id="file-input">
+        
         <input type="text" id="user-input" placeholder="Type a message..." autocomplete="off">
-        <button id="send-btn" class="icon-btn" onclick="handleSend()">➤</button>
+        
+        <button id="send-btn" class="icon-btn" onclick="handleSend()" title="Send Message">
+            <i class="fas fa-paper-plane"></i>
+        </button>
     </div>
 
     <script>
         const chatWin = document.getElementById('chat-window');
         const msgList = document.getElementById('msg-list');
         const uInput = document.getElementById('user-input');
-        const iInput = document.getElementById('image-input');
+        const fInput = document.getElementById('file-input');
         const pBox = document.getElementById('preview-box');
         const pImg = document.getElementById('preview-img');
+        const pText = document.getElementById('preview-content');
 
-        let currentImg = null;
+        let currentFile = null;
 
-        iInput.onchange = (e) => {
+        fInput.onchange = (e) => {
             const file = e.target.files[0];
             if (file) {
-                const reader = new FileReader();
-                reader.onload = (ev) => {
-                    currentImg = ev.target.result;
-                    pImg.src = currentImg;
-                    pBox.style.display = 'block';
-                };
-                reader.readAsDataURL(file);
+                currentFile = file;
+                pBox.style.display = 'block';
+                
+                if (file.type.startsWith('image/')) {
+                    const reader = new FileReader();
+                    reader.onload = (ev) => {
+                        pImg.src = ev.target.result;
+                        pImg.style.display = 'block';
+                        pText.innerText = file.name;
+                    };
+                    reader.readAsDataURL(file);
+                } else {
+                    pImg.style.display = 'none';
+                    let icon = file.type === "application/pdf" ? "fa-file-pdf" : "fa-file";
+                    pText.innerHTML = `<i class="fas ${icon}" style="font-size: 24px;"></i><br>${file.name}`;
+                }
             }
         };
 
         function clearPreview() {
-            currentImg = null;
+            currentFile = null;
             pBox.style.display = 'none';
-            iInput.value = "";
+            fInput.value = "";
         }
 
-        function addMessage(text, type, isImg = false) {
+        function addMessage(content, type, isFile = false, fileName = "", fileType = "") {
             const div = document.createElement('div');
             div.className = `msg ${type}-msg`;
-            if (isImg) {
-                const img = document.createElement('img');
-                img.src = text;
-                img.className = 'chat-img';
-                div.appendChild(img);
+            
+            if (isFile) {
+                if (content.startsWith('data:image/')) {
+                    const img = document.createElement('img');
+                    img.src = content;
+                    img.className = 'chat-img';
+                    div.appendChild(img);
+                } else {
+                    const fileBubble = document.createElement('div');
+                    fileBubble.className = 'file-msg';
+                    let iconClass = fileType === "application/pdf" ? "fa-file-pdf pdf-icon" : "fa-file generic-file-icon";
+                    fileBubble.innerHTML = `<i class="fas ${iconClass}"></i> <span>${fileName}</span>`;
+                    div.appendChild(fileBubble);
+                }
             } else {
-                div.innerText = text;
+                div.innerText = content;
             }
+            
             msgList.appendChild(div);
-
-            // Auto-scroll to the bottom when a new message arrives
             chatWin.scrollTop = chatWin.scrollHeight;
         }
 
         function handleSend() {
             const val = uInput.value.trim();
-            if (!val && !currentImg) return;
-
-            if (currentImg) {
-                addMessage(currentImg, 'user', true);
-                clearPreview();
+            
+            if (currentFile) {
+                const reader = new FileReader();
+                const fName = currentFile.name;
+                const fType = currentFile.type;
+                reader.onload = (ev) => {
+                    addMessage(ev.target.result, 'user', true, fName, fType);
+                    clearPreview();
+                };
+                reader.readAsDataURL(currentFile);
             }
+
             if (val) {
                 addMessage(val, 'user');
                 uInput.value = '';
             }
-
-            // Simple bot auto-response
-            setTimeout(() => addMessage("Message received! We will get back to you soon.", 'bot'), 1000);
         }
 
-        // --- Handle Enter Key ---
         uInput.addEventListener('keydown', function (e) {
             if (e.key === 'Enter') {
                 e.preventDefault();
@@ -220,5 +239,4 @@
     </script>
 
 </body>
-
 </html>
