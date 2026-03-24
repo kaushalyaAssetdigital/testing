@@ -10,6 +10,8 @@
     <script async custom-element="amp-iframe" src="https://cdn.ampproject.org/v0/amp-iframe-0.1.js"></script>
     <script async custom-element="amp-bind" src="https://cdn.ampproject.org/v0/amp-bind-0.1.js"></script>
 
+    <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.15.4/css/all.css">
+
     <style amp-boilerplate>body{-webkit-animation:-amp-start 8s steps(1,end) 0s 1 normal both;-moz-animation:-amp-start 8s steps(1,end) 0s 1 normal both;-ms-animation:-amp-start 8s steps(1,end) 0s 1 normal both;animation:-amp-start 8s steps(1,end) 0s 1 normal both}@-webkit-keyframes -amp-start{from{visibility:hidden}to{visibility:visible}}@-moz-keyframes -amp-start{from{visibility:hidden}to{visibility:visible}}@-ms-keyframes -amp-start{from{visibility:hidden}to{visibility:visible}}@-o-keyframes -amp-start{from{visibility:hidden}to{visibility:visible}}@keyframes -amp-start{from{visibility:hidden}to{visibility:visible}}</style><noscript><style amp-boilerplate>body{-webkit-animation:none;-moz-animation:none;-ms-animation:none;animation:none}</style></noscript>
 
     <style amp-custom>
@@ -28,7 +30,6 @@
             display: none; border-radius: 12px; overflow: hidden;
             box-shadow: 0 5px 20px rgba(0,0,0,0.2);
             background: #fff;
-            /* Open වෙනකොට පොඩි animation එකක් */
             transform-origin: bottom right;
             transition: transform 0.3s ease;
         }
@@ -38,16 +39,13 @@
             from { transform: scale(0); opacity: 0; }
             to { transform: scale(1); opacity: 1; }
         }
-        #chat-window {
-    flex: 1;
-    padding: 15px;
-    overflow-y: auto;
-    display: flex;
-    flex-direction: column; 
-    /* මේ පේළිය තමයි මැසේජ් පල්ලෙහ්ට තල්ලු කරන්නේ */
-    justify-content: flex-end; 
-    gap: 10px;
-}
+
+        /* Icon styling */
+        .chat-btn i {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
     </style>
 </head>
 <body>
@@ -55,21 +53,20 @@
     <amp-state id="chat"><script type="application/json">{"open": false}</script></amp-state>
 
     <button class="chat-btn" on="tap:AMP.setState({chat: {open: !chat.open}})" title="Chat with us">
-        <span [text]="chat.open ? '✕' : '💬'">💬</span>
+        <i class="fas fa-comments" [class]="chat.open ? 'fas fa-times' : 'fas fa-comments'"></i>
     </button>
 
-  <div class="chat-container" [class]="chat.open ? 'chat-container is-open' : 'chat-container'">
-    <amp-iframe width="320" height="480"
-        layout="fixed"
-        sandbox="allow-scripts allow-forms" 
-        frameborder="0"
-        src="https://kaushalyaassetdigital.github.io/testing/chat.html">
-        
-        <div placeholder style="padding: 20px; text-align: center; background: #eee;">
-            Loading Chat...
-        </div>
-    </amp-iframe>
-</div>
+    <div class="chat-container" [class]="chat.open ? 'chat-container is-open' : 'chat-container'">
+        <amp-iframe width="320" height="480"
+            layout="fixed"
+            sandbox="allow-scripts allow-forms" 
+            frameborder="0"
+            src="https://kaushalyaassetdigital.github.io/testing/chat.html">
+            <div placeholder style="padding: 20px; text-align: center; background: #eee; font-family: sans-serif;">
+                <i class="fas fa-spinner fa-spin"></i> Loading...
+            </div>
+        </amp-iframe>
+    </div>
 
 </body>
 </html>

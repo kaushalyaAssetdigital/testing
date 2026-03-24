@@ -53,9 +53,8 @@
         .bot-msg { background: #ffffff; align-self: flex-start; }
         .user-msg { background: #dcf8c6; align-self: flex-end; }
 
-        .chat-img { max-width: 100%; border-radius: 8px; display: block; margin-top: 5px; }
+        .chat-img { max-width: 100%; border-radius: 8px; display: block; margin-top: 5px; width:180px;}
         
-        /* File bubble style */
         .file-msg {
             display: flex;
             align-items: center;
@@ -123,7 +122,7 @@
 
     <div id="chat-window">
         <div id="msg-list">
-            <div class="msg bot-msg">Hi! You can attach images or PDF files here.</div>
+            <div class="msg bot-msg">Welcome! Please select an image or file to start.</div>
         </div>
     </div>
 
@@ -173,7 +172,7 @@
                     reader.readAsDataURL(file);
                 } else {
                     pImg.style.display = 'none';
-                    let icon = file.type === "application/pdf" ? "fa-file-pdf" : "fa-file";
+                    let icon = file.type === "application/pdf" ? "fa-file-pdf pdf-icon" : "fa-file generic-file-icon";
                     pText.innerHTML = `<i class="fas ${icon}" style="font-size: 24px;"></i><br>${file.name}`;
                 }
             }
@@ -190,12 +189,14 @@
             div.className = `msg ${type}-msg`;
             
             if (isFile) {
+                // Image handling
                 if (content.startsWith('data:image/')) {
                     const img = document.createElement('img');
                     img.src = content;
                     img.className = 'chat-img';
                     div.appendChild(img);
                 } else {
+                    // PDF or other file handling
                     const fileBubble = document.createElement('div');
                     fileBubble.className = 'file-msg';
                     let iconClass = fileType === "application/pdf" ? "fa-file-pdf pdf-icon" : "fa-file generic-file-icon";
@@ -207,12 +208,17 @@
             }
             
             msgList.appendChild(div);
+            // Auto scroll to bottom
             chatWin.scrollTop = chatWin.scrollHeight;
         }
 
         function handleSend() {
             const val = uInput.value.trim();
             
+            // Check if there is a file or text
+            if (!val && !currentFile) return;
+
+            // Send File if exists
             if (currentFile) {
                 const reader = new FileReader();
                 const fName = currentFile.name;
@@ -224,10 +230,16 @@
                 reader.readAsDataURL(currentFile);
             }
 
+            // Send Text if exists
             if (val) {
                 addMessage(val, 'user');
                 uInput.value = '';
             }
+
+            // Bot Auto Response
+            setTimeout(() => {
+                addMessage("Message received! Thank you.", "bot");
+            }, 1000);
         }
 
         uInput.addEventListener('keydown', function (e) {
