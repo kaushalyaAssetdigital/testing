@@ -5,34 +5,30 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <style>
         body { font-family: 'Segoe UI', sans-serif; margin: 0; background: #e5ddd5; display: flex; flex-direction: column; height: 100vh; overflow: hidden; }
-        .header { background: #075e54; color: white; padding: 12px; font-weight: bold; text-align: center; }
+        .header { background: #075e54; color: white; padding: 12px; font-weight: bold; text-align: center; position: sticky; top: 0; z-index: 100; }
         
-        /* මැසේජ් පල්ලෙහ් ඉඳන් උඩට පෙනෙන්න justify-content එකතු කළා */
+        /* --- මෙතන තමයි Bottom to Top හැදෙන්නේ --- */
         #chat-window { 
             flex: 1; 
             padding: 15px; 
             overflow-y: auto; 
             display: flex; 
-            flex-direction: column; 
-            justify-content: flex-end; /* මැසේජ් පල්ලෙහ් සිට ආරම්භ වේ */
+            flex-direction: column; /* Messages එකින් එක පල්ලෙහ්ට එන්න */
             gap: 10px;
         }
         
-        /* මැසේජ් ලිස්ට් එකක් විදිහට තබා ගැනීමට අලුත් div එකක් */
-        #msg-container { display: flex; flex-direction: column; gap: 10px; }
-
         .msg { padding: 8px 12px; border-radius: 10px; max-width: 75%; font-size: 14px; word-wrap: break-word; box-shadow: 0 1px 2px rgba(0,0,0,0.1); }
         .bot-msg { background: #ffffff; align-self: flex-start; }
         .user-msg { background: #dcf8c6; align-self: flex-end; }
         .chat-img { max-width: 100%; border-radius: 8px; display: block; margin-top: 5px; }
         
-        #preview-box { display: none; padding: 10px; background: #fff; border-top: 1px solid #075e54; position: relative; text-align: center; }
-        #preview-img { max-height: 100px; max-width: 70%; border-radius: 5px; }
-        .del-btn { position: absolute; top: 0; right: 10px; background: red; color: white; border: none; border-radius: 50%; cursor: pointer; }
+        #preview-box { display: none; padding: 10px; background: #fff; border-top: 2px solid #075e54; position: relative; text-align: center; }
+        #preview-img { max-height: 120px; max-width: 80%; border-radius: 5px; border: 1px solid #ddd; }
+        .del-btn { position: absolute; top: 5px; right: 15px; background: #ff4d4d; color: white; border: none; border-radius: 50%; width: 22px; height: 22px; cursor: pointer; font-weight: bold; }
 
         .input-area { display: flex; align-items: center; padding: 10px; background: #f0f0f0; border-top: 1px solid #ddd; }
-        #user-input { flex: 1; padding: 10px; border: 1px solid #ccc; border-radius: 20px; outline: none; }
-        .icon-btn { cursor: pointer; font-size: 22px; border: none; background: none; color: #075e54; margin: 0 5px; }
+        #user-input { flex: 1; padding: 10px 15px; border: 1px solid #ccc; border-radius: 20px; outline: none; }
+        .icon-btn { cursor: pointer; font-size: 22px; border: none; background: none; color: #075e54; margin: 0 8px; }
         #image-input { display: none; }
     </style>
 </head>
@@ -41,72 +37,99 @@
 <div class="header">Support Chat</div>
 
 <div id="chat-window">
-    <div id="msg-container">
-        <div class="msg bot-msg">ආයුබෝවන්! ඔබට කොහොමද උදව් කරන්නේ?</div>
-    </div>
+    <div class="msg bot-msg">හෙලෝ! ඔබට උදව් කරන්නේ කොහොමද?</div>
 </div>
 
 <div id="preview-box">
     <button class="del-btn" onclick="clearPreview()">×</button>
-    <img id="preview-img" src="">
+    <img id="preview-img" src="" alt="Preview">
 </div>
 
 <div class="input-area">
     <label for="image-input" class="icon-btn">📷</label>
     <input type="file" id="image-input" accept="image/*">
-    <input type="text" id="user-input" placeholder="පණිවිඩය..." autocomplete="off">
-    <button class="icon-btn" onclick="handleSend()">➤</button>
+    <input type="text" id="user-input" placeholder="පණිවිඩය ලියන්න..." autocomplete="off">
+    <button id="send-btn" class="icon-btn" onclick="handleSend()">➤</button>
 </div>
 
 <script>
-    const chatWin = document.getElementById('chat-window');
-    const msgCon = document.getElementById('msg-container');
-    const uInput = document.getElementById('user-input');
-    const iInput = document.getElementById('image-input');
-    const pBox = document.getElementById('preview-box');
-    const pImg = document.getElementById('preview-img');
-    let imgData = null;
+    const chatWindow = document.getElementById('chat-window');
+    const userInput = document.getElementById('user-input');
+    const imageInput = document.getElementById('image-input');
+    const previewBox = document.getElementById('preview-box');
+    const previewImg = document.getElementById('preview-img');
+    
+    let currentBase64 = null;
 
-    function scroll() { chatWin.scrollTop = chatWin.scrollHeight; }
+    // හැමතිස්සෙම අලුත් මැසේජ් එක පේන්න පල්ලෙහ්ට scroll කරන එක
+    function scrollToBottom() {
+        chatWindow.scrollTo({ top: chatWindow.scrollHeight, behavior: 'smooth' });
+    }
 
-    iInput.onchange = (e) => {
-        const f = e.target.files[0];
-        if(f){
-            const r = new FileReader();
-            r.onload = (ex) => { imgData = ex.target.result; pImg.src = imgData; pBox.style.display = 'block'; scroll(); };
-            r.readAsDataURL(f);
+    imageInput.addEventListener('change', function(e) {
+        const file = e.target.files[0];
+        if (file) {
+            const reader = new FileReader();
+            reader.onload = (ev) => {
+                currentBase64 = ev.target.result;
+                previewImg.src = currentBase64;
+                previewBox.style.display = 'block';
+                scrollToBottom();
+            };
+            reader.readAsDataURL(file);
         }
-    };
+    });
 
-    function clearPreview() { imgData = null; pBox.style.display = 'none'; iInput.value = ""; }
+    function clearPreview() {
+        currentBase64 = null;
+        previewImg.src = "";
+        previewBox.style.display = 'none';
+        imageInput.value = ""; 
+    }
 
-    function addMsg(val, type, isImg = false) {
-        const d = document.createElement('div');
-        d.className = `msg ${type}-msg`;
-        if(isImg){
-            const i = document.createElement('img'); i.src = val; i.className = 'chat-img';
-            i.onload = scroll; d.appendChild(i);
-        } else { d.innerText = val; }
-        msgCon.appendChild(d);
-        scroll();
+    function addMessage(content, type, isImage = false) {
+        const div = document.createElement('div');
+        div.className = `msg ${type}-msg`;
+        if (isImage) {
+            const img = document.createElement('img');
+            img.src = content;
+            img.className = 'chat-img';
+            img.onload = scrollToBottom;
+            div.appendChild(img);
+        } else {
+            div.innerText = content;
+        }
+        chatWindow.appendChild(div);
+        scrollToBottom();
     }
 
     function handleSend() {
-        const txt = uInput.value.trim();
-        if(!txt && !imgData) return;
-        if(imgData){ addMsg(imgData, 'user', true); clearPreview(); }
-        if(txt){ addMsg(txt, 'user'); uInput.value = ""; }
-        setTimeout(() => addMsg("ලැබුණා!", 'bot'), 800);
+        const text = userInput.value.trim();
+        if (!text && !currentBase64) return;
+
+        if (currentBase64) {
+            addMessage(currentBase64, 'user', true);
+            clearPreview();
+        }
+        if (text) {
+            addMessage(text, 'user');
+            userInput.value = '';
+        }
+        
+        setTimeout(() => addMessage("ඔබේ පණිවිඩය ලැබුණා!", 'bot'), 1000);
     }
 
-    // --- Enter Key Fix ---
-    uInput.onkeydown = (e) => {
-        if(e.keyCode === 13) {
-            e.preventDefault();
+    // --- Enter Key එක වැඩ කරන විදිහ ---
+    userInput.addEventListener('keydown', function(e) {
+        if (e.key === 'Enter') {
+            e.preventDefault(); // Browser එක refresh වීම නවත්වයි
             handleSend();
-            return false;
         }
-    };
+    });
+
+    // මුලින්ම load වෙද්දී පල්ලෙහ්ටම scroll වෙලා තියෙන්න
+    window.onload = scrollToBottom;
 </script>
+
 </body>
 </html>
