@@ -1,146 +1,224 @@
 <!DOCTYPE html>
 <html>
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <style>
-        body { font-family: 'Segoe UI', sans-serif; margin: 0; background: #e5ddd5; display: flex; flex-direction: column; height: 100vh; overflow: hidden; }
-        .header { background: #075e54; color: white; padding: 12px; font-weight: bold; text-align: center; position: sticky; top: 0; z-index: 100; }
-        
-        /* --- Bottom to Top පෙනුම මෙතනින් --- */
-        #chat-window { 
-            flex: 1; 
-            padding: 15px; 
-            overflow-y: auto; 
-            display: flex; 
-            flex-direction: column; 
-            justify-content: flex-end; /* මැසේජ් පල්ලෙහ් සිට ආරම්භ වීමට */
-            gap: 10px;
+        body {
+            font-family: 'Segoe UI', sans-serif;
+            margin: 0;
+            background: #e5ddd5;
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            overflow: hidden;
         }
 
-        /* මැසේජ් පිළිවෙලට තබා ගන්නා අභ්‍යන්තර container එක */
-        #msg-container {
+        .header {
+            background: #075e54;
+            color: white;
+            padding: 12px;
+            font-weight: bold;
+            text-align: center;
+            z-index: 100;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+        }
+
+        /* --- පණිවිඩ පල්ලෙහ් සිට උඩට පෙනෙන ලොජික් එක --- */
+        #chat-window {
+            flex: 1;
+            padding: 15px;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column-reverse;
+            /* අලුත් ඒවා පල්ලෙහ්ටත් පරණ ඒවා උඩටත් යවයි */
+        }
+
+        #msg-list {
             display: flex;
             flex-direction: column;
             gap: 10px;
-            width: 100%;
         }
-        
-        .msg { padding: 8px 12px; border-radius: 10px; max-width: 75%; font-size: 14px; word-wrap: break-word; box-shadow: 0 1px 2px rgba(0,0,0,0.1); }
-        .bot-msg { background: #ffffff; align-self: flex-start; }
-        .user-msg { background: #dcf8c6; align-self: flex-end; }
-        .chat-img { max-width: 100%; border-radius: 8px; display: block; margin-top: 5px; }
-        
-        #preview-box { display: none; padding: 10px; background: #fff; border-top: 2px solid #075e54; position: relative; text-align: center; }
-        #preview-img { max-height: 120px; max-width: 80%; border-radius: 5px; border: 1px solid #ddd; }
-        .del-btn { position: absolute; top: 5px; right: 15px; background: #ff4d4d; color: white; border: none; border-radius: 50%; width: 22px; height: 22px; cursor: pointer; font-weight: bold; }
 
-        .input-area { display: flex; align-items: center; padding: 10px; background: #f0f0f0; border-top: 1px solid #ddd; }
-        #user-input { flex: 1; padding: 10px 15px; border: 1px solid #ccc; border-radius: 20px; outline: none; }
-        .icon-btn { cursor: pointer; font-size: 22px; border: none; background: none; color: #075e54; margin: 0 8px; }
-        #image-input { display: none; }
+        .msg {
+            padding: 8px 12px;
+            border-radius: 10px;
+            max-width: 75%;
+            font-size: 14px;
+            word-wrap: break-word;
+            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+        }
+
+        .bot-msg {
+            background: #ffffff;
+            align-self: flex-start;
+        }
+
+        .user-msg {
+            background: #dcf8c6;
+            align-self: flex-end;
+        }
+
+        .chat-img {
+            max-width: 100%;
+            border-radius: 8px;
+            display: block;
+            margin-top: 5px;
+        }
+
+        #preview-box {
+            display: none;
+            padding: 10px;
+            background: #fff;
+            border-top: 2px solid #075e54;
+            text-align: center;
+            position: relative;
+        }
+
+        #preview-img {
+            max-height: 100px;
+            border-radius: 5px;
+            border: 1px solid #ddd;
+        }
+
+        .del-btn {
+            position: absolute;
+            top: 5px;
+            right: 15px;
+            background: #ff4d4d;
+            color: white;
+            border: none;
+            border-radius: 50%;
+            cursor: pointer;
+            padding: 2px 7px;
+            font-weight: bold;
+        }
+
+        .input-area {
+            display: flex;
+            align-items: center;
+            padding: 10px;
+            background: #f0f0f0;
+            border-top: 1px solid #ddd;
+        }
+
+        #user-input {
+            flex: 1;
+            padding: 10px 15px;
+            border: 1px solid #ccc;
+            border-radius: 20px;
+            outline: none;
+        }
+
+        .icon-btn {
+            cursor: pointer;
+            font-size: 22px;
+            border: none;
+            background: none;
+            color: #075e54;
+            margin: 0 8px;
+        }
+
+        #image-input {
+            display: none;
+        }
     </style>
 </head>
+
 <body>
 
-<div class="header">Support Chat</div>
+    <div class="header">Support Chat</div>
 
-<div id="chat-window">
-    <div id="msg-container">
-        <div class="msg bot-msg">හෙලෝ! ඔබට උදව් කරන්නේ කොහොමද?</div>
+    <div id="chat-window">
+        <div id="msg-list">
+            <div class="msg bot-msg">ආයුබෝවන්! පින්තූරයක් තෝරා Enter කර යවන්න.</div>
+        </div>
     </div>
-</div>
 
-<div id="preview-box">
-    <button class="del-btn" onclick="clearPreview()">×</button>
-    <img id="preview-img" src="" alt="Preview">
-</div>
+    <div id="preview-box">
+        <button class="del-btn" onclick="clearPreview()">×</button>
+        <img id="preview-img" src="">
+    </div>
 
-<div class="input-area">
-    <label for="image-input" class="icon-btn">📷</label>
-    <input type="file" id="image-input" accept="image/*">
-    <input type="text" id="user-input" placeholder="පණිවිඩය ලියන්න..." autocomplete="off">
-    <button id="send-btn" class="icon-btn" onclick="handleSend()">➤</button>
-</div>
+    <div class="input-area">
+        <label for="image-input" class="icon-btn">📷</label>
+        <input type="file" id="image-input" accept="image/*">
+        <input type="text" id="user-input" placeholder="පණිවිඩය ලියන්න..." autocomplete="off">
+        <button id="send-btn" class="icon-btn" onclick="handleSend()">➤</button>
+    </div>
 
-<script>
-    const chatWindow = document.getElementById('chat-window');
-    const msgContainer = document.getElementById('msg-container');
-    const userInput = document.getElementById('user-input');
-    const imageInput = document.getElementById('image-input');
-    const previewBox = document.getElementById('preview-box');
-    const previewImg = document.getElementById('preview-img');
-    
-    let currentBase64 = null;
+    <script>
+        const chatWin = document.getElementById('chat-window');
+        const msgList = document.getElementById('msg-list');
+        const uInput = document.getElementById('user-input');
+        const iInput = document.getElementById('image-input');
+        const pBox = document.getElementById('preview-box');
+        const pImg = document.getElementById('preview-img');
 
-    function scrollToBottom() {
-        // justify-content: flex-end නිසා සමහර විට scrollTop වැඩ කරන්නේ නැති වෙන්න පුළුවන්, 
-        // ඒ නිසා අන්තිම මැසේජ් එකට scroll කරන ක්‍රමය වඩාත් හොඳයි.
-        chatWindow.scrollTop = chatWindow.scrollHeight;
-    }
+        let currentImg = null;
 
-    imageInput.addEventListener('change', function(e) {
-        const file = e.target.files[0];
-        if (file) {
-            const reader = new FileReader();
-            reader.onload = (ev) => {
-                currentBase64 = ev.target.result;
-                previewImg.src = currentBase64;
-                previewBox.style.display = 'block';
-                setTimeout(scrollToBottom, 50);
-            };
-            reader.readAsDataURL(file);
+        iInput.onchange = (e) => {
+            const file = e.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = (ev) => {
+                    currentImg = ev.target.result;
+                    pImg.src = currentImg;
+                    pBox.style.display = 'block';
+                };
+                reader.readAsDataURL(file);
+            }
+        };
+
+        function clearPreview() {
+            currentImg = null;
+            pBox.style.display = 'none';
+            iInput.value = "";
         }
-    });
 
-    function clearPreview() {
-        currentBase64 = null;
-        previewImg.src = "";
-        previewBox.style.display = 'none';
-        imageInput.value = ""; 
-    }
+        function addMessage(text, type, isImg = false) {
+            const div = document.createElement('div');
+            div.className = `msg ${type}-msg`;
+            if (isImg) {
+                const img = document.createElement('img');
+                img.src = text;
+                img.className = 'chat-img';
+                div.appendChild(img);
+            } else {
+                div.innerText = text;
+            }
+            msgList.appendChild(div);
 
-    function addMessage(content, type, isImage = false) {
-        const div = document.createElement('div');
-        div.className = `msg ${type}-msg`;
-        if (isImage) {
-            const img = document.createElement('img');
-            img.src = content;
-            img.className = 'chat-img';
-            img.onload = scrollToBottom;
-            div.appendChild(img);
-        } else {
-            div.innerText = content;
+            // පණිවිඩයක් ආපු ගමන් පල්ලෙහ්ටම scroll කරනවා
+            chatWin.scrollTop = chatWin.scrollHeight;
         }
-        msgContainer.appendChild(div);
-        setTimeout(scrollToBottom, 50);
-    }
 
-    function handleSend() {
-        const text = userInput.value.trim();
-        if (!text && !currentBase64) return;
+        function handleSend() {
+            const val = uInput.value.trim();
+            if (!val && !currentImg) return;
 
-        if (currentBase64) {
-            addMessage(currentBase64, 'user', true);
-            clearPreview();
+            if (currentImg) {
+                addMessage(currentImg, 'user', true);
+                clearPreview();
+            }
+            if (val) {
+                addMessage(val, 'user');
+                uInput.value = '';
+            }
+
+            setTimeout(() => addMessage("පණිවිඩය ලැබුණා!", 'bot'), 1000);
         }
-        if (text) {
-            addMessage(text, 'user');
-            userInput.value = '';
-        }
-        
-        setTimeout(() => addMessage("ඔබේ පණිවිඩය ලැබුණා!", 'bot'), 1000);
-    }
 
-    userInput.addEventListener('keydown', function(e) {
-        if (e.key === 'Enter') {
-            e.preventDefault();
-            handleSend();
-        }
-    });
-
-    window.onload = scrollToBottom;
-</script>
+        // --- Enter Key Fix (keydown පාවිච්චි කරන්න) ---
+        uInput.addEventListener('keydown', function (e) {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                handleSend();
+            }
+        });
+    </script>
 
 </body>
+
 </html>
