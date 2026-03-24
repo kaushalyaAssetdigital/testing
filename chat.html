@@ -6,120 +6,107 @@
     <style>
         body { font-family: 'Segoe UI', sans-serif; margin: 0; background: #e5ddd5; display: flex; flex-direction: column; height: 100vh; overflow: hidden; }
         .header { background: #075e54; color: white; padding: 12px; font-weight: bold; text-align: center; }
-        #chat-window { flex: 1; padding: 15px; overflow-y: auto; display: flex; flex-direction: column; gap: 10px; }
-        .msg { padding: 8px 12px; border-radius: 10px; max-width: 75%; font-size: 14px; word-wrap: break-word; }
-        .bot-msg { background: #ffffff; align-self: flex-start; box-shadow: 0 1px 2px rgba(0,0,0,0.1); }
-        .user-msg { background: #dcf8c6; align-self: flex-end; box-shadow: 0 1px 2px rgba(0,0,0,0.1); }
+        
+        /* මැසේජ් පල්ලෙහ් ඉඳන් උඩට පෙනෙන්න justify-content එකතු කළා */
+        #chat-window { 
+            flex: 1; 
+            padding: 15px; 
+            overflow-y: auto; 
+            display: flex; 
+            flex-direction: column; 
+            justify-content: flex-end; /* මැසේජ් පල්ලෙහ් සිට ආරම්භ වේ */
+            gap: 10px;
+        }
+        
+        /* මැසේජ් ලිස්ට් එකක් විදිහට තබා ගැනීමට අලුත් div එකක් */
+        #msg-container { display: flex; flex-direction: column; gap: 10px; }
+
+        .msg { padding: 8px 12px; border-radius: 10px; max-width: 75%; font-size: 14px; word-wrap: break-word; box-shadow: 0 1px 2px rgba(0,0,0,0.1); }
+        .bot-msg { background: #ffffff; align-self: flex-start; }
+        .user-msg { background: #dcf8c6; align-self: flex-end; }
         .chat-img { max-width: 100%; border-radius: 8px; display: block; margin-top: 5px; }
         
-        /* --- Preview Box --- */
-        #preview-box {
-            display: none; 
-            padding: 10px;
-            background: #fff;
-            border-top: 2px solid #075e54;
-            position: relative;
-            text-align: center;
-            min-height: 50px;
-        }
-        #preview-img { 
-            max-height: 150px; 
-            max-width: 90%; 
-            border-radius: 5px; 
-            border: 2px solid #ddd;
-            display: inline-block;
-        }
-        .del-btn {
-            position: absolute; top: 5px; right: 10px;
-            background: #ff4d4d; color: white; border: none;
-            border-radius: 50%; width: 25px; height: 25px; cursor: pointer; font-weight: bold;
-            z-index: 10;
-        }
+        #preview-box { display: none; padding: 10px; background: #fff; border-top: 1px solid #075e54; position: relative; text-align: center; }
+        #preview-img { max-height: 100px; max-width: 70%; border-radius: 5px; }
+        .del-btn { position: absolute; top: 0; right: 10px; background: red; color: white; border: none; border-radius: 50%; cursor: pointer; }
 
         .input-area { display: flex; align-items: center; padding: 10px; background: #f0f0f0; border-top: 1px solid #ddd; }
         #user-input { flex: 1; padding: 10px; border: 1px solid #ccc; border-radius: 20px; outline: none; }
-        .icon-btn { cursor: pointer; font-size: 22px; border: none; background: none; color: #075e54; margin: 0 8px; }
+        .icon-btn { cursor: pointer; font-size: 22px; border: none; background: none; color: #075e54; margin: 0 5px; }
         #image-input { display: none; }
     </style>
 </head>
 <body>
 
 <div class="header">Support Chat</div>
+
 <div id="chat-window">
-    <div class="msg bot-msg">හෙලෝ! පින්තූරයක් තෝරා Preview කර බලන්න.</div>
+    <div id="msg-container">
+        <div class="msg bot-msg">ආයුබෝවන්! ඔබට කොහොමද උදව් කරන්නේ?</div>
+    </div>
 </div>
 
 <div id="preview-box">
     <button class="del-btn" onclick="clearPreview()">×</button>
-    <img id="preview-img" src="" alt="Image Preview">
+    <img id="preview-img" src="">
 </div>
 
 <div class="input-area">
     <label for="image-input" class="icon-btn">📷</label>
     <input type="file" id="image-input" accept="image/*">
-    <input type="text" id="user-input" placeholder="පණිවිඩය ලියන්න...">
-    <button id="send-btn" class="icon-btn" onclick="handleSend()">➤</button>
+    <input type="text" id="user-input" placeholder="පණිවිඩය..." autocomplete="off">
+    <button class="icon-btn" onclick="handleSend()">➤</button>
 </div>
 
 <script>
-    const chatWindow = document.getElementById('chat-window');
-    const userInput = document.getElementById('user-input');
-    const imageInput = document.getElementById('image-input');
-    const previewBox = document.getElementById('preview-box');
-    const previewImg = document.getElementById('preview-img');
-    
-    let currentBase64 = null;
+    const chatWin = document.getElementById('chat-window');
+    const msgCon = document.getElementById('msg-container');
+    const uInput = document.getElementById('user-input');
+    const iInput = document.getElementById('image-input');
+    const pBox = document.getElementById('preview-box');
+    const pImg = document.getElementById('preview-img');
+    let imgData = null;
 
-    imageInput.addEventListener('change', function(e) {
-        const file = e.target.files[0];
-        if (file) {
-            const reader = new FileReader();
-            reader.onload = function(event) {
-                currentBase64 = event.target.result;
-                previewImg.src = currentBase64;
-                previewBox.style.display = 'block';
-                chatWindow.scrollTop = chatWindow.scrollHeight; // Auto scroll
-            };
-            reader.readAsDataURL(file);
+    function scroll() { chatWin.scrollTop = chatWin.scrollHeight; }
+
+    iInput.onchange = (e) => {
+        const f = e.target.files[0];
+        if(f){
+            const r = new FileReader();
+            r.onload = (ex) => { imgData = ex.target.result; pImg.src = imgData; pBox.style.display = 'block'; scroll(); };
+            r.readAsDataURL(f);
         }
-    });
+    };
 
-    function clearPreview() {
-        currentBase64 = null;
-        previewImg.src = "";
-        previewBox.style.display = 'none';
-        imageInput.value = ""; 
-    }
+    function clearPreview() { imgData = null; pBox.style.display = 'none'; iInput.value = ""; }
 
-    function addMessage(content, type, isImage = false) {
-        const div = document.createElement('div');
-        div.className = `msg ${type}-msg`;
-        if (isImage) {
-            const img = document.createElement('img');
-            img.src = content;
-            img.className = 'chat-img';
-            div.appendChild(img);
-        } else {
-            div.innerText = content;
-        }
-        chatWindow.appendChild(div);
-        chatWindow.scrollTop = chatWindow.scrollHeight;
+    function addMsg(val, type, isImg = false) {
+        const d = document.createElement('div');
+        d.className = `msg ${type}-msg`;
+        if(isImg){
+            const i = document.createElement('img'); i.src = val; i.className = 'chat-img';
+            i.onload = scroll; d.appendChild(i);
+        } else { d.innerText = val; }
+        msgCon.appendChild(d);
+        scroll();
     }
 
     function handleSend() {
-        const text = userInput.value.trim();
-        if (currentBase64) {
-            addMessage(currentBase64, 'user', true);
-            clearPreview();
-        }
-        if (text) {
-            addMessage(text, 'user');
-            userInput.value = '';
-        }
-        if (text || currentBase64) {
-            setTimeout(() => addMessage("ඔබේ පණිවිඩය ලැබුණා!", 'bot'), 1000);
-        }
+        const txt = uInput.value.trim();
+        if(!txt && !imgData) return;
+        if(imgData){ addMsg(imgData, 'user', true); clearPreview(); }
+        if(txt){ addMsg(txt, 'user'); uInput.value = ""; }
+        setTimeout(() => addMsg("ලැබුණා!", 'bot'), 800);
     }
+
+    // --- Enter Key Fix ---
+    uInput.onkeydown = (e) => {
+        if(e.keyCode === 13) {
+            e.preventDefault();
+            handleSend();
+            return false;
+        }
+    };
 </script>
 </body>
 </html>
