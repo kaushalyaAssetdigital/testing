@@ -19,33 +19,54 @@
             background: #075e54; color: white; border: none;
             font-size: 24px; cursor: pointer; z-index: 1000;
             box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+            display: flex; align-items: center; justify-content: center;
+            outline: none;
         }
         .chat-container {
             position: fixed; bottom: 90px; right: 20px;
             width: 320px; height: 480px; z-index: 999;
             display: none; border-radius: 12px; overflow: hidden;
             box-shadow: 0 5px 20px rgba(0,0,0,0.2);
+            background: #fff;
+            /* Open වෙනකොට පොඩි animation එකක් */
+            transform-origin: bottom right;
+            transition: transform 0.3s ease;
         }
-        .is-open { display: block; }
+        .is-open { display: block; animation: showChat 0.3s ease; }
+        
+        @keyframes showChat {
+            from { transform: scale(0); opacity: 0; }
+            to { transform: scale(1); opacity: 1; }
+        }
+        #chat-window {
+    flex: 1;
+    padding: 15px;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column; 
+    /* මේ පේළිය තමයි මැසේජ් පල්ලෙහ්ට තල්ලු කරන්නේ */
+    justify-content: flex-end; 
+    gap: 10px;
+}
     </style>
 </head>
 <body>
 
     <amp-state id="chat"><script type="application/json">{"open": false}</script></amp-state>
 
-    <button class="chat-btn" on="tap:AMP.setState({chat: {open: !chat.open}})">
+    <button class="chat-btn" on="tap:AMP.setState({chat: {open: !chat.open}})" title="Chat with us">
         <span [text]="chat.open ? '✕' : '💬'">💬</span>
     </button>
 
-<div class="chat-container" [class]="chat.open ? 'chat-container is-open' : 'chat-container'">
-    <amp-iframe width="320" height="480"
-        layout="fixed"
-        sandbox="allow-scripts allow-forms" 
-        frameborder="0"
-        src="https://kaushalyaassetdigital.github.io/testing/chat.html"> 
-        <div placeholder>Loading Chat...</div>
-    </amp-iframe>
-</div>
+    <div class="chat-container" [class]="chat.open ? 'chat-container is-open' : 'chat-container'">
+        <amp-iframe width="320" height="480"
+            layout="fixed"
+            sandbox="allow-scripts allow-forms" 
+            frameborder="0"
+            src="https://kaushalyaassetdigital.github.io/testing/chat.html">
+            <div placeholder style="padding: 20px; text-align: center;">Loading...</div>
+        </amp-iframe>
+    </div>
 
 </body>
 </html>
